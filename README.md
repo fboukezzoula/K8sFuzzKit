@@ -23,7 +23,60 @@ _Example :_
 + You can easy activate the installation of an external tools to complete your Kubernetes Cluster installation like an external secret and configuration management service (vault, consul), 
 a service mesh (istio, gloo, linkerd), a serverless service/framework (openfaas, kubeless, openwhisk), a CD/CI service (Jenkins-x) and more tools in the next release (Stay tuned !) 
  
-+ A browser will be automatically open at the end of the Kubernetes Cluster deployment and you have only to **paste** the authentication token (RBAC) which have been automatically generated and copy to the clipboard for you ! 
++ A browser will be automatically open at the end of the Kubernetes Cluster deployment and you have only to **paste** the authentication token (RBAC) which have been automatically generated and copy to the clipboard for you ! Cool, isn't it ?
+
+
+``` 
+{
+    "K8sFuzzKit": {
+        "debug": false,
+        "hyper-v": {
+            "K8sFuzzKit_VM_CPU": 2,
+            "K8sFuzzKit_VM_MEM": 3072,
+            "K8sFuzzKit_VM_NAME": "K8sFuzzKit",
+            "K8sFuzzKit_VM_VSWITCH": "internal_vSwitch_K8sFuzzKit",
+            "K8sFuzzKit_VM_BASE_SUBNET": "10.1.100.",
+            "K8sFuzzKit_VM_BASE_IPADDRESS": "10.1.100.200"
+        },
+        "vagrant": {
+            "K8sFuzzKit_OS_IMAGE": "centos/7",
+            "K8sFuzzKit_SMB_USERNAME": "vagrantsmb",
+            "K8sFuzzKit_SMB_PASSWORD": "24K8sKit09!1",
+            "K8sFuzzKit_VM_SSH_PASSWORD": "#K8sFuzzKit#"
+        },
+        "kubernetes": { 
+            "number-nodes-cluster": 3,
+            "dns-cluster-add-on" : true,
+            "kubernetes-tls" : true,
+            "pod-network-add-on" : {
+                    "network-type": "Flannel",
+                    "network-CIDR": "10.244.0.0/16"
+            }
+         },
+        "external-tools": {
+            "vault": false,
+            "consul": false,
+            "private-registry": false,
+            "jenkins-x": true,
+            "services-kubernetes-add-one": {
+                "service-mesh" : {
+                    "istio": true,
+					"gloo": false,
+                    "linkerd": false                    
+                },
+                "serverless" : {
+                    "openfaas": false,
+                    "kubeless": false,
+                    "openwhisk": false
+                } 
+            }
+        }
+    }   
+}
+
+
+``` 
+
 
 
 ## Feedback and Pull Requests are of course welcome !
