@@ -32,7 +32,7 @@
             "services-kubernetes-add-one": {
                 "service-mesh" : {
                     "istio": true,
-					"gloo": false,
+		    "gloo": false,
                     "linkerd": false                    
                 },
                 "serverless" : {
