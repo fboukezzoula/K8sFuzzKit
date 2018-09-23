@@ -51,6 +51,14 @@ choco install kubernetes-helm
 
 ## _K8sFuzzKit_ - Configure your Kubernetes Cluster and external tools by editing the **_K8sFuzzKit.json_** file
 
+_Edit this json file_ :
++ **hyper-v** node : define the configuration of each VM machine (vCPU, RAM, root name of your VM in Hyper-V, name of the vSwitch, the Subnet Mask and the @IP of the first node in your Kubernetes Cluster) ;
+
++ **vagrant** node : each VM machine in Hyper-V will mount a CIFS/SMB Share with the host (your laptop/desktop). You have to define a Windows account (in preference an Administrator account but not mandatory. The Windows account have to reach a folder called **_shared_** which will create on the root folder) ;
+
++ **kubernetes** node : define the total of nodes you want for your Kubernetes Cluster, the intra-network pod type and the CIDR network (the **_K8sFuzzKit_** support only Flannel type on this actual version)
+
+
 ``` 
 {
     "K8sFuzzKit": {
