@@ -1,5 +1,5 @@
 
-## K8sFuzzKit : a new tool to deploy a full Kubernetes Cluster with embed external tools in Hyper-V in only one click !
+## _K8sFuzzKit_ : a new tool to deploy a full Kubernetes Cluster with embed external tools in Hyper-V in only one click !
 
 ![ScreenShot](https://github.com/fboukezzoula/K8sFuzzKit/blob/master/resources/K8sFuzzKitLogo.png)
 
@@ -25,6 +25,13 @@ a service mesh (istio, gloo, linkerd), a serverless service/framework (openfaas,
  
 + A browser will be automatically open at the end of the Kubernetes Cluster deployment and you have only to **paste** the authentication token (RBAC) which have been automatically generated and copy to the clipboard for you ! Cool, isn't it ?
 
+
+To perform all this **_K8sFuzzKit_** configuration and tasks, you have only to update a json file (**_K8sFuzzKit.json_**) and execute the Powershell Script called **_Install-K8sFuzzKit.ps1_**. THAT'S ALL !
+
+
+
+
+## 
 
 ``` 
 {
