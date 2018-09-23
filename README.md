@@ -104,6 +104,6 @@ choco install kubernetes-helm
 
 
 
-## Feedback and Pull Requests are of course welcome !
+## _K8sFuzzKit_ - Feedback and Pull Requests are of course welcome !
 If you have some improvements, bug fixes, some new tricks, just post a new PR. 
 If you have questions or issues, open an issue for discussion.
