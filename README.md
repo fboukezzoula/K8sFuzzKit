@@ -126,7 +126,7 @@ _Edit this json file_ :
 
 ![ScreenShot](https://github.com/fboukezzoula/K8sFuzzKit/blob/master/resources/kubernetes_dashboard_pods.png)
 
-+ You can use the CLI kubectl to manage your Kubernetes Cluster. **_K8sFuzzKit_** tool will automatically configure your laptop/desktop for you ! If there is already a folder called .kube in your Windows profile folder, **_K8sFuzzKit_** tool will backup for you !
++ You can use the CLI **kubectl** to manage your Kubernetes Cluster. **_K8sFuzzKit_** tool will automatically configure your laptop/desktop for you ! If there is already a folder called .kube in your Windows profile folder, **_K8sFuzzKit_** tool will backup for you !
 
 ![ScreenShot](https://github.com/fboukezzoula/K8sFuzzKit/blob/master/resources/commande.png)
 
