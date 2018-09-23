@@ -58,6 +58,7 @@ _Edit this json file_ :
 
 + **kubernetes** node : define the total of nodes you want for your Kubernetes Cluster, the intra-network pod type and the CIDR network (the **_K8sFuzzKit_** support only Flannel type on this actual version)
 
++ **external-tools** node : true = deploy, false = bypass (notice that the dictionary of services will grow and enable in the next version of the tool)
 
 ``` 
 {
@@ -94,7 +95,7 @@ _Edit this json file_ :
             "services-kubernetes-add-one": {
                 "service-mesh" : {
                     "istio": true,
-					"gloo": false,
+		    "gloo": false,
                     "linkerd": false                    
                 },
                 "serverless" : {
@@ -107,9 +108,25 @@ _Edit this json file_ :
     }   
 }
 
-
 ``` 
 
+## _K8sFuzzKit_ - Run the Powershell script called _Install-K8sFuzzKit.ps1_
+
++ Hyper-V result after the deployment of **_K8sFuzzKit_** tool and according the **_K8sFuzzKit.json_** configuration :
+
+![ScreenShot](https://github.com/fboukezzoula/K8sFuzzKit/blob/master/resources/hyperv.png)
+
++ You can paste the **Kubernetes Dashboard Token** (this token is write in a file called shared\token_dashboard.log and his content is automatically copy to the clipboard for you) :
+
+![ScreenShot](https://github.com/fboukezzoula/K8sFuzzKit/blob/master/resources/kubernetes_dashboard-token.png)
+
+![ScreenShot](https://github.com/fboukezzoula/K8sFuzzKit/blob/master/resources/kubernetes_dashboard.png)
+
+![ScreenShot](https://github.com/fboukezzoula/K8sFuzzKit/blob/master/resources/kubernetes_dashboard_pods.png)
+
+![ScreenShot](https://github.com/fboukezzoula/K8sFuzzKit/blob/master/resources/commande.png)
+
+![ScreenShot](https://github.com/fboukezzoula/K8sFuzzKit/blob/master/resources/helm_command.png)
 
 
 ## _K8sFuzzKit_ - Feedback and Pull Requests are of course welcome !
