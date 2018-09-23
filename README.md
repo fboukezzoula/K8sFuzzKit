@@ -23,12 +23,22 @@ _Example :_
 + You can easy activate the installation of an external tools to complete your Kubernetes Cluster installation like an external secret and configuration management service (vault, consul), 
 a service mesh (istio, gloo, linkerd), a serverless service/framework (openfaas, kubeless, openwhisk), a CD/CI service (Jenkins-x) and more tools in the next release (Stay tuned !) 
  
++ Your laptop/desktop will be automatically configure to use your Kubernetes Cluster matching your parameters (command kubectl for example) and all the external tools (istioctl, jx the CLI of Jenkins-X, etc ...). Cool, isn't it ?
+
 + A browser will be automatically open at the end of the Kubernetes Cluster deployment and you have only to **paste** the authentication token (RBAC) which have been automatically generated and copy to the clipboard for you ! Cool, isn't it ?
 
 
 To perform all this **_K8sFuzzKit_** configuration and tasks, you have only to update a json file (**_K8sFuzzKit.json_**) and execute the Powershell Script called **_Install-K8sFuzzKit.ps1_**. THAT'S ALL !
 
 
+## _K8sFuzzKit_ - Setup requirements
+
++ Hyper-V installed 
+
+``` 
+Install-WindowsFeature -Name Hyper-V -ComputerName <computer_name> -IncludeManagementTools -Restart  
+Install-WindowsFeature -Name Hyper-V -ComputerName <computer_name> -IncludeManagementTools -Restart  
+``` 
 
 
 ## 
