@@ -44,11 +44,12 @@ Install-WindowsFeature -Name Hyper-V -ComputerName <computer_name> -IncludeManag
 ```
 Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 choco install vagrant --version 2.0.2
+vagrant plugin install vagrant-reload
 choco install kubernetes-cli
 choco install kubernetes-helm
 ```
 
-## 
+## _K8sFuzzKit_ - Configure your Kubernetes Cluster and external tools by editing the **_K8sFuzzKit.json_** file
 
 ``` 
 {
