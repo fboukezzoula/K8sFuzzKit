@@ -37,9 +37,16 @@ To perform all this **_K8sFuzzKit_** configuration and tasks, you have only to u
 
 ``` 
 Install-WindowsFeature -Name Hyper-V -ComputerName <computer_name> -IncludeManagementTools -Restart  
-Install-WindowsFeature -Name Hyper-V -ComputerName <computer_name> -IncludeManagementTools -Restart  
 ``` 
 
++ Severals tools installed on your laptop/desktop
+
+```
+Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+choco install vagrant --version 2.0.2
+choco install kubernetes-cli
+choco install kubernetes-helm
+```
 
 ## 
 
