@@ -120,11 +120,17 @@ _Edit this json file_ :
 
 ![ScreenShot](https://github.com/fboukezzoula/K8sFuzzKit/blob/master/resources/kubernetes_dashboard-token.png)
 
++ You can notice that all is up and running ... and green :o)  :
+
 ![ScreenShot](https://github.com/fboukezzoula/K8sFuzzKit/blob/master/resources/kubernetes_dashboard.png)
 
 ![ScreenShot](https://github.com/fboukezzoula/K8sFuzzKit/blob/master/resources/kubernetes_dashboard_pods.png)
 
++ You can use the CLI kubectl to manage your Kubernetes Cluster. **_K8sFuzzKit_** tool will automatically configure your laptop/desktop for you ! If there is already a folder called .kube in your Windows profile folder, **_K8sFuzzKit_** tool will backup for you !
+
 ![ScreenShot](https://github.com/fboukezzoula/K8sFuzzKit/blob/master/resources/commande.png)
+
++ **_K8sFuzzKit_** will automatically install and configure Helm and Tiller for you in a secured approach.
 
 ![ScreenShot](https://github.com/fboukezzoula/K8sFuzzKit/blob/master/resources/helm_command.png)
 
