@@ -134,6 +134,10 @@ _Edit this json file_ :
 
 ![ScreenShot](https://github.com/fboukezzoula/K8sFuzzKit/blob/master/resources/helm_command.png)
 
+## _K8sFuzzKit_ - Stop and Start your Kubernetes Cluster
+
++ If you run a **vagrant halt** to stop all the VM machines or you have power off them with the Hyper-V options, only run the Powershell Script called _**Start-K8sFuzzKit.ps1**_ to start your **_K8sFuzzKit_** Kubernetes Cluster.
+
 
 ## _K8sFuzzKit_ - Feedback and Pull Requests are of course welcome !
 If you have some improvements, bug fixes, some new tricks, just post a new PR. 
