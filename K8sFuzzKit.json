@@ -1,0 +1,46 @@
+{
+    "K8sFuzzKit": {
+        "debug": false,
+        "hyper-v": {
+            "K8sFuzzKit_VM_CPU": 2,
+            "K8sFuzzKit_VM_MEM": 3072,
+            "K8sFuzzKit_VM_NAME": "K8sFuzzKit",
+            "K8sFuzzKit_VM_VSWITCH": "internal_vSwitch_K8sFuzzKit",
+            "K8sFuzzKit_VM_BASE_SUBNET": "10.1.100.",
+            "K8sFuzzKit_VM_BASE_IPADDRESS": "10.1.100.200"
+        },
+        "vagrant": {
+            "K8sFuzzKit_OS_IMAGE": "centos/7",
+            "K8sFuzzKit_SMB_USERNAME": "vagrantsmb",
+            "K8sFuzzKit_SMB_PASSWORD": "24K8sKit09!1",
+            "K8sFuzzKit_VM_SSH_PASSWORD": "#K8sFuzzKit#"
+        },
+        "kubernetes": { 
+            "number-nodes-cluster": 3,
+            "dns-cluster-add-on" : true,
+            "kubernetes-tls" : true,
+            "pod-network-add-on" : {
+                    "network-type": "Flannel",
+                    "network-CIDR": "10.244.0.0/16"
+            }
+         },
+        "external-tools": {
+            "vault": false,
+            "consul": false,
+            "private-registry": false,
+            "jenkins-x": true,
+            "services-kubernetes-add-one": {
+                "service-mesh" : {
+                    "istio": true,
+					"gloo": false,
+                    "linkerd": false                    
+                },
+                "serverless" : {
+                    "openfaas": false,
+                    "kubeless": false,
+                    "openwhisk": false
+                } 
+            }
+        }
+    }   
+}
