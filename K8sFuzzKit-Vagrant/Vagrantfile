@@ -1,0 +1,272 @@
+Vagrant.configure(2) do |config|
+
+    config.vm.box = "centos/7"
+    config.vm.network "public_network", bridge: ENV['K8sFuzzKit_VM_VSWITCH']
+    config.vm.boot_timeout = 600
+    config.ssh.insert_key = false 
+
+    ###########################
+    #                         # 
+    #  CREATE MANAGER NODE(S) #    
+    #                         # 
+    ###########################
+
+    (1..##TOTAL_MANAGER_NODES##).each do |i|           
+
+        config.vm.define "#{ENV['K8sFuzzKit_VM_NAME']}-Manager-Node0#{i}" do | k8sfuzzkit|     
+        unless File.exist?(".vagrant/machines/#{ENV['K8sFuzzKit_VM_NAME']}-Manager-Node0#{i}/hyperv/action_provision")     
+
+            k8sfuzzkit.vm.provision "shell", inline: <<-SHELL
+
+            # set the keyboard to FR
+            localectl set-keymap fr
+        
+            # Update sysconfig
+            sed -i 's/\(HOSTNAME=\).*/\1#{ENV['K8sFuzzKit_VM_NAME']}-Manager-Node0#{i}/' /etc/sysconfig/network
+        
+            # Update DNS
+            sed -i 's/\(DHCP_HOSTNAME=\).*/\1"#{ENV['K8sFuzzKit_VM_NAME']}-Manager-Node0#{i}"/' /etc/sysconfig/network-scripts/ifcfg-*
+        
+            # Set the hostname - use hostnamectl if available
+            echo '#{ENV['K8sFuzzKit_VM_NAME']}-Manager-Node0#{i}' > /etc/hostname
+            if command -v hostnamectl; then
+                hostnamectl set-hostname --static '#{ENV['K8sFuzzKit_VM_NAME']}-Manager-Node0#{i}'
+                hostnamectl set-hostname --transient '#{ENV['K8sFuzzKit_VM_NAME']}-Manager-Node0#{i}'
+            else
+                hostname -F /etc/hostname
+            fi
+        
+            # Prepend ourselves to /etc/hosts
+            grep -w '#{ENV['K8sFuzzKit_VM_NAME']}-Manager-Node0#{i}' /etc/hosts || {
+                sed -i'' '1i 127.0.0.1\t#{ENV['K8sFuzzKit_VM_NAME']}-Manager-Node0#{i}\t#{ENV['K8sFuzzKit_VM_NAME']}-Manager-Node0#{i}' /etc/hosts
+            }
+			
+            # create group and add vagrant user - for synced_folder (cifs/smb)
+            groupadd www-data
+            usermod -g www-data vagrant
+
+            # change de password of the user vagrant
+            echo "vagrant:#{ENV['K8sFuzzKit_VM_SSH_PASSWORD']}" | chpasswd
+			
+			# PasswordAuthentication ssh
+			sed -i "s|#PasswordAuthentication yes|PasswordAuthentication yes|g" /etc/ssh/sshd_config
+			systemctl restart sshd
+
+            # Remove and re-create the file /etc/sysconfig/network-scripts/ifcfg-eth0 with the TCP/IP configuration
+            rm -f /etc/sysconfig/network-scripts/ifcfg-eth0
+            
+            echo 'DEVICE="eth0"' >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            echo 'BOOTPROTO=static' >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            echo 'IPADDR=#{ENV['K8sFuzzKit_VM_BASE_SUBNET']}#{##BASE_IPADDRESS## + i}' >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            echo 'NETMASK=255.255.255.0' >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            echo 'GATEWAY=#{ENV['K8sFuzzKit_VM_BASE_SUBNET']}1' >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            echo 'DNS1=1.0.0.1' >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            echo 'DNS2=1.1.1.1' >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            echo 'DNS3=8.8.4.4' >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            echo 'DNS4=8.8.8.8' >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            
+            chmod 644 /etc/sysconfig/network-scripts/ifcfg-eth0
+        
+            # Disable the SELinux 
+            setenforce 0
+            sed -i --follow-symlinks 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux
+
+            # Add the below entries in the conf file to change the Linux host bridge values
+            echo 'net.bridge.bridge-nf-call-ip6tables = 1' >> /etc/sysctl.conf
+            echo 'net.bridge.bridge-nf-call-iptables = 1' >> /etc/sysctl.conf
+
+            # Disable the SWAP by adding the # symbol at the beginning  
+            sed -i "s|/dev/mapper/VolGroup00-LogVol01 swap|# /dev/mapper/VolGroup00-LogVol01 swap|g" /etc/fstab
+
+            # Create a new file named kubernetes.repo under yum.repos.d folder  
+            echo '[kubernetes]' >> /etc/yum.repos.d/kubernetes.repo
+            echo 'name=Kubernetes' >> /etc/yum.repos.d/kubernetes.repo
+            echo 'baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64' >> /etc/yum.repos.d/kubernetes.repo
+            echo ' ' >> /etc/yum.repos.d/kubernetes.repo
+            echo 'enabled=1' >> /etc/yum.repos.d/kubernetes.repo
+            echo 'gpgcheck=1' >> /etc/yum.repos.d/kubernetes.repo
+            echo 'repo_gpgcheck=1' >> /etc/yum.repos.d/kubernetes.repo
+            echo 'gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg' >> /etc/yum.repos.d/kubernetes.repo
+            echo '       https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg' >> /etc/yum.repos.d/kubernetes.repo      
+
+            # Restart network
+            service network restart
+
+            # disable delta RPMs
+            echo 'deltarpm=0' >> /etc/yum.conf
+
+            # Install the packages need for hyper-v, cifs/smb, docker and kubeadm
+            
+            yum update -y
+            yum install -y hyperv-daemons cifs-utils unzip git </dev/null
+            yum install -y kubeadm docker </dev/null
+            yum clean all    
+			
+			curl -sSL https://github.com/jenkins-x/jx/releases/download/v1.3.272/jx-linux-amd64.tar.gz | tar xzv && mv jx /usr/local/bin && chmod +x /usr/local/bin
+			curl -sS https://releases.hashicorp.com/vault/0.11.0/vault_0.11.0_linux_amd64.zip > vault.zip && curl -sS https://releases.hashicorp.com/consul/1.2.2/consul_1.2.2_linux_amd64.zip > consul.zip
+			unzip vault.zip && unzip consul.zip
+			mv vault /usr/bin/vault && mv consul /usr/bin/consul   
+			chmod +x /usr/bin/vault && chmod +x /usr/bin/consul  
+			rm -f vault.zip && rm -f consul.zip
+            
+            # Enable and start the docker and kubelet services 
+            systemctl enable docker && systemctl enable kubelet
+            systemctl start docker && systemctl start kubelet
+			
+            SHELL
+        
+        else
+            k8sfuzzkit.vm.synced_folder "./shared", "/shared",{
+            type: 'smb', mount_options: ['vers=3.0'],
+            smb_username: ENV['K8sFuzzKit_SMB_USERNAME'],
+            smb_password: ENV['K8sFuzzKit_SMB_PASSWORD']
+            }
+            k8sfuzzkit.vm.post_up_message = "Your VM is ready for use."
+        end	 
+
+            k8sfuzzkit.vm.provider "hyperv" do |h|
+                h.enable_virtualization_extensions = true
+                h.differencing_disk = true
+                h.vmname = "#{ENV['K8sFuzzKit_VM_NAME']}-Manager-Node0#{i}" 
+                h.ip_address_timeout = 240
+                h.cpus = ENV['K8sFuzzKit_VM_CPU']
+                h.memory = ENV['K8sFuzzKit_VM_MEM']       
+            end 
+
+        end        
+        
+    end    
+
+    ###########################
+    #                         # 
+    #  CREATE WORKER NODE(S)  #    
+    #                         # 
+    ###########################    
+
+    (1..##TOTAL_WORKER_NODES##).each do |j|              
+
+        config.vm.define "#{ENV['K8sFuzzKit_VM_NAME']}-Worker-Node0#{j}" do | k8sfuzzkit|   
+        unless File.exist?(".vagrant/machines/#{ENV['K8sFuzzKit_VM_NAME']}-Worker-Node0#{j}/hyperv/action_provision")       
+
+            k8sfuzzkit.vm.provision "shell", inline: <<-SHELL
+
+            # set the keyboard to FR
+            localectl set-keymap fr
+        
+            # Update sysconfig
+            sed -i 's/\(HOSTNAME=\).*/\1#{ENV['K8sFuzzKit_VM_NAME']}-Worker-Node0#{j}/' /etc/sysconfig/network
+        
+            # Update DNS
+            sed -i 's/\(DHCP_HOSTNAME=\).*/\1"#{ENV['K8sFuzzKit_VM_NAME']}-Worker-Node0#{j}"/' /etc/sysconfig/network-scripts/ifcfg-*
+        
+            # Set the hostname - use hostnamectl if available
+            echo '#{ENV['K8sFuzzKit_VM_NAME']}-Worker-Node0#{j}' > /etc/hostname
+            if command -v hostnamectl; then
+                hostnamectl set-hostname --static '#{ENV['K8sFuzzKit_VM_NAME']}-Worker-Node0#{j}'
+                hostnamectl set-hostname --transient '#{ENV['K8sFuzzKit_VM_NAME']}-Worker-Node0#{j}'
+            else
+                hostname -F /etc/hostname
+            fi
+        
+            # Prepend ourselves to /etc/hosts
+            grep -w '#{ENV['K8sFuzzKit_VM_NAME']}-Worker-Node0#{j}' /etc/hosts || {
+                sed -i'' '1i 127.0.0.1\t#{ENV['K8sFuzzKit_VM_NAME']}-Worker-Node0#{j}\t#{ENV['K8sFuzzKit_VM_NAME']}-Worker-Node0#{j}' /etc/hosts
+            }
+				       
+            # create group and add vagrant user - for synced_folder (cifs/smb)
+            groupadd www-data
+            usermod -g www-data vagrant
+
+            # change de password of the user vagrant
+            echo "vagrant:#{ENV['K8sFuzzKit_VM_SSH_PASSWORD']}" | chpasswd
+			
+			# PasswordAuthentication ssh
+			sed -i "s|#PasswordAuthentication yes|PasswordAuthentication yes|g" /etc/ssh/sshd_config
+			systemctl restart sshd			
+
+            # Remove and re-create the file /etc/sysconfig/network-scripts/ifcfg-eth0 with the TCP/IP configuration
+            rm -f /etc/sysconfig/network-scripts/ifcfg-eth0
+            
+            echo 'DEVICE="eth0"' >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            echo 'BOOTPROTO=static' >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            echo 'IPADDR=#{ENV['K8sFuzzKit_VM_BASE_SUBNET']}#{##BASE_IPADDRESS## + ##TOTAL_MANAGER_NODES## + j}' >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            echo 'NETMASK=255.255.255.0' >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            echo 'GATEWAY=#{ENV['K8sFuzzKit_VM_BASE_SUBNET']}1' >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            echo 'DNS1=1.0.0.1' >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            echo 'DNS2=1.1.1.1' >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            echo 'DNS3=8.8.4.4' >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            echo 'DNS4=8.8.8.8' >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            
+            chmod 644 /etc/sysconfig/network-scripts/ifcfg-eth0
+        
+            # Disable the SELinux 
+            setenforce 0
+            sed -i --follow-symlinks 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux
+
+            # Add the below entries in the conf file to change the Linux host bridge values
+            echo 'net.bridge.bridge-nf-call-ip6tables = 1' >> /etc/sysctl.conf
+            echo 'net.bridge.bridge-nf-call-iptables = 1' >> /etc/sysctl.conf
+
+            # Disable the SWAP by adding the # symbol at the beginning  
+            sed -i "s|/dev/mapper/VolGroup00-LogVol01 swap|# /dev/mapper/VolGroup00-LogVol01 swap|g" /etc/fstab
+
+            # Create a new file named kubernetes.repo under yum.repos.d folder  
+            echo '[kubernetes]' >> /etc/yum.repos.d/kubernetes.repo
+            echo 'name=Kubernetes' >> /etc/yum.repos.d/kubernetes.repo
+            echo 'baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64' >> /etc/yum.repos.d/kubernetes.repo
+            echo ' ' >> /etc/yum.repos.d/kubernetes.repo
+            echo 'enabled=1' >> /etc/yum.repos.d/kubernetes.repo
+            echo 'gpgcheck=1' >> /etc/yum.repos.d/kubernetes.repo
+            echo 'repo_gpgcheck=1' >> /etc/yum.repos.d/kubernetes.repo
+            echo 'gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg' >> /etc/yum.repos.d/kubernetes.repo
+            echo '       https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg' >> /etc/yum.repos.d/kubernetes.repo      
+
+            # Restart network
+            service network restart
+
+            # disable delta RPMs
+            echo 'deltarpm=0' >> /etc/yum.conf
+
+            # Install the packages need for hyper-v, cifs/smb, docker and kubeadm
+            
+            yum update -y
+            yum install -y hyperv-daemons cifs-utils unzip git </dev/null
+            yum install -y kubeadm docker </dev/null
+            yum clean all   
+
+			curl -sSL https://github.com/jenkins-x/jx/releases/download/v1.3.272/jx-linux-amd64.tar.gz | tar xzv && mv jx /usr/local/bin && chmod +x /usr/local/bin
+			curl -sS https://releases.hashicorp.com/vault/0.11.0/vault_0.11.0_linux_amd64.zip > vault.zip && curl -sS https://releases.hashicorp.com/consul/1.2.2/consul_1.2.2_linux_amd64.zip > consul.zip
+			unzip vault.zip && unzip consul.zip
+			mv vault /usr/bin/vault && mv consul /usr/bin/consul   
+			chmod +x /usr/bin/vault && chmod +x /usr/bin/consul  
+			rm -f vault.zip && rm -f consul.zip			
+            
+            # Enable and start the docker and kubelet services 
+            systemctl enable docker && systemctl enable kubelet
+            systemctl start docker && systemctl start kubelet
+		
+            SHELL
+
+        else
+            k8sfuzzkit.vm.synced_folder "./shared", "/shared",{
+            type: 'smb', mount_options: ['vers=3.0'],
+            smb_username: ENV['K8sFuzzKit_SMB_USERNAME'],
+            smb_password: ENV['K8sFuzzKit_SMB_PASSWORD']
+            }
+            k8sfuzzkit.vm.post_up_message = "Your VM is ready for use."
+        end	    
+
+            k8sfuzzkit.vm.provider "hyperv" do |h|
+                h.enable_virtualization_extensions = true
+                h.differencing_disk = true
+                h.vmname = "#{ENV['K8sFuzzKit_VM_NAME']}-Worker-Node0#{j}" 
+                h.ip_address_timeout = 240
+                h.cpus = ENV['K8sFuzzKit_VM_CPU']
+                h.memory = ENV['K8sFuzzKit_VM_MEM']       
+            end 
+
+        end        
+        
+    end 
+
+end
